@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
-import { getMovies } from './../services/fakeMovieService';
+import { getMovies, deleteMovie } from './../services/fakeMovieService';
 import { getGenres } from './../services/fakeGenreService';
 import Pagination from './common/pagination';
 import { paginate } from './../utils/paginate';
 import ListGroup from './common/listGroup';
 import MoviesTable from './moviesTable';
 import _ from 'lodash';
+import SearchBox from './common/searchBox';
 
 class Movie extends Component {
 	state = {
@@ -17,6 +18,7 @@ class Movie extends Component {
 			path: 'title',
 			order: 'asc',
 		},
+		query: '',
 	};
 
 	componentDidMount() {
@@ -39,7 +41,13 @@ class Movie extends Component {
 					/>
 				</div>
 				<div className='col'>
+					<button
+						className='btn btn-primary btn-m mb-4'
+						onClick={() => this.props.history.push('/movies/new')}>
+						New Movie
+					</button>
 					<p>Showing {totalCount} movies from the database</p>
+					<SearchBox value={this.state.query} onSearch={this.handleSearch} />
 					<MoviesTable
 						pageMovies={pageMovies}
 						sortColumn={this.state.sortColumn}
@@ -59,7 +67,8 @@ class Movie extends Component {
 	}
 
 	handleDelete = (movie) => {
-		const movies = this.state.movies.filter((m) => m._id !== movie._id);
+		deleteMovie(movie._id);
+		const movies = getMovies();
 		this.setState({ movies });
 	};
 
@@ -76,13 +85,18 @@ class Movie extends Component {
 	};
 
 	handleGenreSelect = (genre) => {
-		this.setState({ selectedGenre: genre, currPage: 1 });
+		this.setState({ selectedGenre: genre, currPage: 1, query: '' });
 	};
 
 	handleSort = (sortColumn) => {
 		this.setState({
 			sortColumn,
 		});
+	};
+
+	handleSearch = (event) => {
+		const query = event.currentTarget.value;
+		this.setState({ query, currPage: 1, selectedGenre: this.state.genres[0] });
 	};
 
 	getPageData = () => {
@@ -92,12 +106,17 @@ class Movie extends Component {
 			pageSize,
 			selectedGenre,
 			sortColumn,
+			query,
 		} = this.state;
 
-		const filtered =
-			selectedGenre && selectedGenre._id
-				? movies.filter((m) => m.genre._id === selectedGenre._id)
-				: movies;
+		let filtered;
+		if (query) {
+			filtered = movies.filter((movie) => {
+				return movie.title.toLowerCase().startsWith(query.toLowerCase());
+			});
+		} else if (selectedGenre && selectedGenre._id)
+			filtered = movies.filter((m) => m.genre._id === selectedGenre._id);
+		else filtered = movies;
 
 		const sorted = _.orderBy(filtered, [sortColumn.path], [sortColumn.order]);
 
