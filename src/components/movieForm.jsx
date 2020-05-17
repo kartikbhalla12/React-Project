@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import Form from './common/form';
 import Joi from 'joi-browser';
-import { getGenres } from './../services/fakeGenreService';
-import { getMovie, saveMovie } from './../services/fakeMovieService';
+import { getGenres } from './../services/genreService';
+import { getMovie, saveMovie } from './../services/movieService';
 
 class MovieDetails extends Form {
 	state = {
@@ -16,25 +16,36 @@ class MovieDetails extends Form {
 		errors: {},
 	};
 
-	componentDidMount = () => {
-		const genres = getGenres();
+	populateGenres = async () => {
+		const { data: genres } = await getGenres();
 		this.setState({ genres });
-
-		const movieId = this.props.match.params.id;
-		if (movieId === 'new') return;
-
-		const movie = getMovie(movieId);
-		if (!movie) return this.props.history.replace('/not-found');
-		this.setState({
-			data: {
-				_id: movie._id,
-				title: movie.title,
-				genreId: movie.genre._id,
-				numberInStock: movie.numberInStock,
-				dailyRentalRate: movie.dailyRentalRate,
-			},
-		});
 	};
+
+	populateMovie = async () => {
+		try {
+			const movieId = this.props.match.params.id;
+			if (movieId === 'new') return;
+
+			const { data: movie } = await getMovie(movieId);
+			this.setState({
+				data: {
+					_id: movie._id,
+					title: movie.title,
+					genreId: movie.genre._id,
+					numberInStock: movie.numberInStock,
+					dailyRentalRate: movie.dailyRentalRate,
+				},
+			});
+		} catch (ex) {
+			if (ex.response && ex.response.status === 404)
+				this.props.history.replace('/not-found');
+		}
+	};
+
+	async componentDidMount() {
+		await this.populateGenres();
+		await this.populateMovie();
+	}
 
 	schema = {
 		_id: Joi.string(),
@@ -69,11 +80,6 @@ class MovieDetails extends Form {
 			</div>
 		);
 	}
-
-	// handleSave = () => {
-	// 	const { push } = this.props.history;
-	// 	push('/movies');
-	// };
 }
 
 export default MovieDetails;
