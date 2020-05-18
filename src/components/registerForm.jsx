@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import Form from './common/form';
 import Joi from 'joi-browser';
+import { registerUser } from '../services/userServices';
+import { loginWithJwt } from './../services/authService';
 
 class RegisterForm extends Form {
 	state = {
@@ -18,9 +20,18 @@ class RegisterForm extends Form {
 		name: Joi.string().min(3).required().label('Name'),
 	};
 
-	doSubmit = () => {
-		// Call the server
-		console.log('submitted');
+	doSubmit = async () => {
+		try {
+			const { headers } = await registerUser(this.state.data);
+			loginWithJwt(headers['x-auth-token']);
+			window.location = '/';
+		} catch (ex) {
+			if (ex.response && ex.response.status === 400) {
+				const errors = { ...this.state.errors };
+				errors.username = ex.response.data;
+				this.setState({ errors });
+			}
+		}
 	};
 
 	render() {
