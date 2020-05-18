@@ -1,13 +1,12 @@
 import http from './httpService';
-import { apiUrl } from '../config.json';
 import _ from 'lodash';
 
 function movieUrl(id) {
-	return `${apiUrl}/movies/${id}`;
+	return `/movies/${id}`;
 }
 
 export function getMovies() {
-	return http.get(`${apiUrl}/movies`);
+	return http.get(`/movies`);
 }
 
 export function getMovie(id) {
@@ -17,12 +16,12 @@ export function getMovie(id) {
 export function saveMovie(movie) {
 	if (movie._id) {
 		return http.put(
-			`${apiUrl}/movies/${movie._id}`,
+			`/movies/${movie._id}`,
 			_.pick(movie, ['title', 'genreId', 'numberInStock', 'dailyRentalRate'])
 		);
 	}
 
-	return http.post(`${apiUrl}/movies/`, movie);
+	return http.post(`/movies/`, movie);
 }
 
 export function deleteMovie(id) {
