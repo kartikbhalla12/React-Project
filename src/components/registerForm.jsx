@@ -12,11 +12,7 @@ class RegisterForm extends Form {
       password: '',
       name: ''
     },
-    errors: {},
-    loading: false
-  };
-  fetchData = () => {
-    this.setState({ loading: true });
+    errors: {}
   };
 
   schema = {
@@ -40,8 +36,6 @@ class RegisterForm extends Form {
   };
 
   render() {
-    const { loading } = this.state;
-
     return (
       <div className='container mt-5' style={{ maxWidth: '35vw' }}>
         <h1 className='mb-5' style={{ textAlign: 'center' }}>
